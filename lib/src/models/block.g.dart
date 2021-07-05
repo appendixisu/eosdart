@@ -15,21 +15,22 @@ Block _$BlockFromJson(Map<String, dynamic> json) {
     ..timestamp = json['timestamp'] == null
         ? null
         : DateTime.parse(json['timestamp'] as String)
-    ..producer = json['producer'] as String
-    ..confirmed = json['confirmed'] as int
-    ..previous = json['previous'] as String
-    ..transactionMRoot = json['transaction_mroot'] as String
-    ..actionMRoot = json['action_mroot'] as String
-    ..scheduleVersion = json['schedule_version'] as int
+    ..producer = json['producer'] as String?
+    ..confirmed = json['confirmed'] as int?
+    ..previous = json['previous'] as String?
+    ..transactionMRoot = json['transaction_mroot'] as String?
+    ..actionMRoot = json['action_mroot'] as String?
+    ..scheduleVersion = json['schedule_version'] as int?
     ..newProducers = json['new_producers']
-    ..headerExtensions = json['header_extensions'] as List
-    ..producerSignature = json['producer_signature'] as String
-    ..transactions = (json['transactions'] as List)
-        ?.map((e) => e == null
+    ..headerExtensions = json['header_extensions'] as List<dynamic>?
+    ..producerSignature = json['producer_signature'] as String?
+    ..transactions = (json['transactions'] as List? ?? [])
+        .map((e) => e == null
             ? null
             : TransactionReceipt.fromJson(e as Map<String, dynamic>))
-        ?.toList()
-    ..blockExtensions = json['block_extensions'] as List
+        .cast<TransactionReceipt>()
+        .toList()
+    ..blockExtensions = json['block_extensions'] as List<dynamic>?
     ..refBlockPrefix = json['ref_block_prefix'] as int;
 }
 

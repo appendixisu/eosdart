@@ -14,24 +14,22 @@ ActionWithReceipt _$ActionWithReceiptFromJson(Map<String, dynamic> json) {
     ..action = json['act'] == null
         ? null
         : Action.fromJson(json['act'] as Map<String, dynamic>)
-    ..contextFree = json['context_free'] as bool
-    ..elapsed = json['elapsed'] as int
-    ..console = json['console'] as String
-    ..trxId = json['trx_id'] as String
+    ..contextFree = json['context_free'] as bool?
+    ..elapsed = json['elapsed'] as int?
+    ..console = json['console'] as String?
+    ..trxId = json['trx_id'] as String?
     ..blockNum = json['block_num'] == null
         ? null
         : ConversionHelper.getIntFromJson(json['block_num'])
     ..blockTime = json['block_time'] == null
         ? null
         : DateTime.parse(json['block_time'] as String)
-    ..producerBlockId = json['producer_block_id'] as String
-    ..accountRamDeltas = json['account_ram_deltas'] as List
+    ..producerBlockId = json['producer_block_id'] as String?
+    ..accountRamDeltas = json['account_ram_deltas'] as List<dynamic>?
     ..except = json['except']
-    ..inlineTraces = (json['inline_traces'] as List)
-        ?.map((e) => e == null
-            ? null
-            : ActionWithReceipt.fromJson(e as Map<String, dynamic>))
-        ?.toList();
+    ..inlineTraces = (json['inline_traces'] as List? ?? [])
+        .map((e) => ActionWithReceipt.fromJson(e as Map<String, dynamic>))
+        .toList();
 }
 
 Map<String, dynamic> _$ActionWithReceiptToJson(ActionWithReceipt instance) =>
@@ -55,18 +53,18 @@ Action _$ActionFromJson(Map<String, dynamic> json) {
     ..account = json['account'] as String
     ..name = json['name'] as String
     ..authorization = (json['authorization'] as List)
-        ?.map((e) => e == null
+        .map((e) => e == null
             ? null
             : Authorization.fromJson(e as Map<String, dynamic>))
-        ?.toList()
+        .cast<Authorization>()
+        .toList()
     ..data = json['data'];
 }
 
 Map<String, dynamic> _$ActionToJson(Action instance) => <String, dynamic>{
       'account': instance.account,
       'name': instance.name,
-      'authorization':
-          instance.authorization?.map((e) => e?.toJson())?.toList(),
+      'authorization': instance.authorization?.map((e) => e.toJson()).toList(),
       'data': instance.data
     };
 
@@ -88,15 +86,15 @@ Map<String, dynamic> _$ActionArgsToJson(ActionArgs instance) =>
 
 ActionReceipt _$ActionReceiptFromJson(Map<String, dynamic> json) {
   return ActionReceipt()
-    ..receiver = json['receiver'] as String
-    ..actDigest = json['act_digest'] as String
+    ..receiver = json['receiver'] as String?
+    ..actDigest = json['act_digest'] as String?
     ..globalSequence = json['global_sequence'] == null
         ? null
         : ConversionHelper.getIntFromJson(json['global_sequence'])
     ..receiveSequence = json['recv_sequence'] == null
         ? null
         : ConversionHelper.getIntFromJson(json['recv_sequence'])
-    ..authSequence = json['auth_sequence'] as List
+    ..authSequence = json['auth_sequence'] as List<dynamic>?
     ..codeSequence = json['code_sequence'] == null
         ? null
         : ConversionHelper.getIntFromJson(json['code_sequence'])

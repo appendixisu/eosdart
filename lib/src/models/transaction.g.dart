@@ -22,10 +22,11 @@ TransactionBlock _$TransactionBlockFromJson(Map<String, dynamic> json) {
         ? null
         : ConversionHelper.getIntFromJson(json['last_irreversible_block'])
     ..traces = (json['traces'] as List)
-        ?.map((e) => e == null
+        .map((e) => e == null
             ? null
             : ActionWithReceipt.fromJson(e as Map<String, dynamic>))
-        ?.toList();
+        .cast<ActionWithReceipt>()
+        .toList();
 }
 
 Map<String, dynamic> _$TransactionBlockToJson(TransactionBlock instance) =>
@@ -78,20 +79,18 @@ Transaction _$TransactionFromJson(Map<String, dynamic> json) {
     ..expiration = json['expiration'] == null
         ? null
         : DateTime.parse(json['expiration'] as String)
-    ..refBlockNum = json['ref_block_num'] as int
-    ..refBlockPrefix = json['ref_block_prefix'] as int
+    ..refBlockNum = json['ref_block_num'] as int?
+    ..refBlockPrefix = json['ref_block_prefix'] as int?
     ..maxNetUsageWords = json['max_net_usage_words'] as int
     ..maxCpuUsageMs = json['max_cpu_usage_ms'] as int
     ..delaySec = json['delay_sec'] as int
-    ..contextFreeActions = json['context_free_actions'] as List
+    ..contextFreeActions = json['context_free_actions'] as List<dynamic>
     ..actions = (json['actions'] as List)
-        ?.map((e) =>
-            e == null ? null : Action.fromJson(e as Map<String, dynamic>))
-        ?.toList()
-    ..transactionExtensions = json['transaction_extensions'] as List
-    ..signatures =
-        (json['signatures'] as List)?.map((e) => e as String)?.toList()
-    ..contextFreeData = json['context_free_data'] as List;
+        .map((e) => Action.fromJson(e as Map<String, dynamic>))
+        .toList()
+    ..transactionExtensions = json['transaction_extensions'] as List<dynamic>
+    ..signatures = (json['signatures'] as List).map((e) => e as String).toList()
+    ..contextFreeData = json['context_free_data'] as List<dynamic>;
 }
 
 Map<String, dynamic> _$TransactionToJson(Transaction instance) =>
@@ -103,7 +102,7 @@ Map<String, dynamic> _$TransactionToJson(Transaction instance) =>
       'max_cpu_usage_ms': instance.maxCpuUsageMs,
       'delay_sec': instance.delaySec,
       'context_free_actions': instance.contextFreeActions,
-      'actions': instance.actions?.map((e) => e?.toJson())?.toList(),
+      'actions': instance.actions.map((e) => e.toJson()).toList(),
       'transaction_extensions': instance.transactionExtensions,
       'signatures': instance.signatures,
       'context_free_data': instance.contextFreeData
@@ -148,10 +147,8 @@ TransactionProcessed _$TransactionProcessedFromJson(Map<String, dynamic> json) {
         : ConversionHelper.getIntFromJson(json['net_usage'])
     ..scheduled = json['scheduled'] as bool
     ..actionTraces = (json['action_traces'] as List)
-        ?.map((e) => e == null
-            ? null
-            : ActionWithReceipt.fromJson(e as Map<String, dynamic>))
-        ?.toList();
+        .map((e) => ActionWithReceipt.fromJson(e as Map<String, dynamic>))
+        .toList();
 }
 
 Map<String, dynamic> _$TransactionProcessedToJson(

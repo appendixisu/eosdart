@@ -48,7 +48,9 @@ main() {
     "EOS8Qi58kbERkTJC7A4gabxYU4SbrAxStJHacoke4sf6AvJyEDZXj",
     "EOS5hF6jM5otV3jYdLVWqQ2Lidpb7LtN8dsXsFHFocggzvfGHGfR1"
   ];
-  client.getRequiredKeys(transaction, availableKeys).then((RequiredKeys rkeys) {
+  client
+      .getRequiredKeys(transaction: transaction, availableKeys: availableKeys)
+      .then((RequiredKeys rkeys) {
     print(rkeys);
   });
 }
