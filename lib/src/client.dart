@@ -64,37 +64,25 @@ class EOSClient {
   Future<dynamic> _post(String path, Object body) async {
     Completer completer = Completer();
     var url = Uri.parse('${this._nodeURL}/${this._version}${path}');
-    print("""
-      ===== EOSClient: _post =====
-      $url
-      body:
-      ${json.encode(body)}
-      ============================""");
-    var response = await http
-        .post(url, body: json.encode(body))
-        .timeout(Duration(seconds: this.httpTimeout));
-    // http
-    //     .post(
-    //       Uri.parse('${this._nodeURL}/${this._version}${path}'),
-    //       body: json.encode(body),
-    //     )
-    //     .timeout(Duration(seconds: this.httpTimeout))
-    //     .then((http.Response response) {
-    if (response.statusCode >= 300) {
-      completer.completeError(response.body);
-    } else {
-      completer.complete(json.decode(response.body));
+    try {
+      var response = await http
+          .post(url, body: json.encode(body))
+          .timeout(Duration(seconds: this.httpTimeout));
+      if (response.statusCode >= 300) {
+        completer.completeError(response.body);
+      } else {
+        completer.complete(json.decode(response.body));
+      }
+      return completer.future;
+    } catch (e) {
+      throw e.toString();
     }
-    // });
-    return completer.future;
   }
 
   /// Get EOS Node Info
   Future<NodeInfo> getInfo() async {
-    print("getInfo");
     return this._post('/chain/get_info', {}).then((nodeInfo) {
       NodeInfo info = NodeInfo.fromJson(nodeInfo);
-      print(info.toString());
       return info;
     });
   }
