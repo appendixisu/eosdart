@@ -1,6 +1,6 @@
 import 'package:eosdart/eosdart.dart';
 
-main() {
+main() async {
   EOSClient client = EOSClient('http://127.0.0.1:8888', 'v1');
 
   List<Authorization> auth = [
@@ -48,8 +48,20 @@ main() {
     "EOS8Qi58kbERkTJC7A4gabxYU4SbrAxStJHacoke4sf6AvJyEDZXj",
     "EOS5hF6jM5otV3jYdLVWqQ2Lidpb7LtN8dsXsFHFocggzvfGHGfR1"
   ];
+
+  NodeInfo info = await client.getInfo();
+
+  Block refBlock = await client.getBlock(
+    blockNumOrId: (info.headBlockNum! - 3).toString(),
+  );
+
   client
-      .getRequiredKeys(transaction: transaction, availableKeys: availableKeys)
+      .getRequiredKeys(
+    transaction: transaction,
+    availableKeys: availableKeys,
+    info: info,
+    refBlock: refBlock,
+  )
       .then((RequiredKeys rkeys) {
     print(rkeys);
   });

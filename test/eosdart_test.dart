@@ -4,11 +4,6 @@ import 'package:test/test.dart';
 void main() {
   group('EOS Client', () {
     EOSClient client = EOSClient('https://eos.greymass.com', 'v1');
-    // EOSClient client = EOSClient('https://uat-eos.gpayeasy.com', 'v1');
-
-    // setUp(() {
-    //   client = EOSClient('https://eos.greymass.com', 'v1');
-    // });
 
     test('Get Info', () async {
       NodeInfo nodeInfo = await client.getInfo();

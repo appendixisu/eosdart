@@ -590,13 +590,23 @@ bool supportedAbiVersion(String version) {
   return version.startsWith('eosio::abi/1.');
 }
 
-void serializeStruct(Type self, SerialBuffer buffer, Object? data,
-    {SerializerState? state, allowExtensions = true}) {
+void serializeStruct(
+  Type self,
+  SerialBuffer buffer,
+  Object? data, {
+  SerializerState? state,
+  allowExtensions = true,
+}) {
   if (state == null) state = SerializerState();
   // try {
   if (self.base?.serialize != null) {
-    self.base?.serialize!(self.base, buffer, data,
-        state: state, allowExtensions: allowExtensions);
+    self.base?.serialize!(
+      self.base,
+      buffer,
+      data,
+      state: state,
+      allowExtensions: allowExtensions,
+    );
   }
   Map dy = data as dynamic;
   for (var field in self.fields) {
@@ -1218,12 +1228,12 @@ Map<String, Type> getTypesFromAbi(Map<String, Type> initialTypes, Abi abi) {
     }
   }
   if (abi.variants != null) {
-    for (var v in (abi.variants ?? [])) {
+    for (AbiVariants v in (abi.variants ?? [])) {
       types[v.name] = createType(
         name: v.name,
         fields: v.types
-            ?.map((s) => Field(name: s, typeName: s, type: null))
-            ?.toList(),
+            .map((s) => Field(name: s, typeName: s, type: null))
+            .toList(),
         serialize: serializeVariant,
         deserialize: deserializeVariant,
       );

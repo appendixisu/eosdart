@@ -10,6 +10,11 @@ class Field {
   Type? type;
 
   Field({required this.name, required this.type, required this.typeName});
+
+  @override
+  String toString() {
+    return "{name: $name, typeName: $typeName}";
+  }
 }
 
 class Type {
@@ -35,17 +40,18 @@ class Type {
 
   Function? deserialize;
 
-  Type(
-      {required this.name,
-      required this.aliasOfName,
-      required this.arrayOf,
-      required this.optionalOf,
-      required this.extensionOf,
-      required this.baseName,
-      required this.base,
-      required this.fields,
-      required this.serialize,
-      required this.deserialize});
+  Type({
+    required this.name,
+    required this.aliasOfName,
+    required this.arrayOf,
+    required this.optionalOf,
+    required this.extensionOf,
+    required this.baseName,
+    required this.base,
+    required this.fields,
+    required this.serialize,
+    required this.deserialize,
+  });
 }
 
 class Contract {

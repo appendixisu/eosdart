@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:eosdart_ecc/eosdart_ecc.dart' as ecc;
@@ -34,7 +35,7 @@ class EOSClient {
   EOSClient(
     this._nodeURL,
     this._version, {
-    this.expirationInSec = 180,
+    this.expirationInSec = 360,
     List<String> privateKeys = const [],
     this.httpTimeout = 10,
   }) {
@@ -68,6 +69,8 @@ class EOSClient {
       var response = await http
           .post(url, body: json.encode(body))
           .timeout(Duration(seconds: this.httpTimeout));
+      // print(response.request);
+      // print(json.encode(body));
       if (response.statusCode >= 300) {
         completer.completeError(response.body);
       } else {
@@ -215,10 +218,12 @@ class EOSClient {
   Future<RequiredKeys> getRequiredKeys({
     required Transaction transaction,
     required List<String> availableKeys,
+    required NodeInfo info,
+    required Block refBlock,
   }) async {
-    NodeInfo info = await getInfo();
-    Block refBlock =
-        await getBlock(blockNumOrId: (info.headBlockNum).toString());
+    // NodeInfo info = await getInfo();
+    // Block refBlock =
+    //     await getBlock(blockNumOrId: (info.headBlockNum).toString());
     Transaction trx = await _fullFill(transaction, refBlock);
     trx = await _serializeActions(trx);
 
@@ -289,6 +294,8 @@ class EOSClient {
       transactionType: transactionTypes['transaction']!,
       transaction: trx,
       sign: sign,
+      info: info,
+      refBlock: refBlock,
     );
 
     if (broadcast) {
@@ -303,6 +310,377 @@ class EOSClient {
     }
 
     return pushTransactionArgs;
+  }
+
+  Future<dynamic> delegatebw(
+    String account,
+    String net,
+    String cpu, {
+    bool sign = true,
+    int blocksBehind = 3,
+  }) async {
+    if (!_checkEOSAccount(account)) {
+      throw 'account format failed';
+    }
+
+    if (!_checkQuantityFormat(net)) {
+      throw 'net format failed';
+    }
+
+    if (!_checkQuantityFormat(cpu)) {
+      throw 'cpu format failed';
+    }
+
+    List<Authorization> auth = [
+      Authorization()
+        ..actor = "$account"
+        ..permission = "active"
+    ];
+
+    Map data = {
+      "from": "$account",
+      "receiver": "$account",
+      "stake_net_quantity": "$net EOS",
+      "stake_cpu_quantity": "$cpu EOS",
+      "transfer": false,
+    };
+
+    List<Action> actions = [
+      Action()
+        ..account = 'eosio'
+        ..name = 'delegatebw'
+        ..authorization = auth
+        ..data = data
+    ];
+
+    // print(actions.first.toJson().toString());
+
+    Transaction transaction = Transaction()..actions = actions;
+
+    NodeInfo info = await this.getInfo();
+    if (info.headBlockNum == null ||
+        info.chainId == null ||
+        transactionTypes['transaction'] == null) {
+      return Future.error('info or type is NULL');
+    }
+
+    Block refBlock = await getBlock(
+      blockNumOrId: (info.headBlockNum! - blocksBehind).toString(),
+    );
+    Transaction trx = await _fullFill(transaction, refBlock);
+    PushTransactionArgs pushTransactionArgs = await _pushTransactionArgs(
+      chainId: info.chainId!,
+      transactionType: transactionTypes['transaction']!,
+      transaction: trx,
+      sign: sign,
+      info: info,
+      refBlock: refBlock,
+    );
+
+    var response = await this._post('/chain/push_transaction', {
+      'signatures': pushTransactionArgs.signatures,
+      'compression': false,
+      'packed_context_free_data': '',
+      'packed_trx': ser.arrayToHex(pushTransactionArgs.serializedTransaction),
+    });
+
+    return response;
+  }
+
+  Future<dynamic> undelegatebw(
+    String account,
+    String net,
+    String cpu, {
+    bool sign = true,
+    int blocksBehind = 3,
+  }) async {
+    if (!_checkEOSAccount(account)) {
+      throw 'account format failed';
+    }
+
+    if (!_checkQuantityFormat(net)) {
+      throw 'net format failed';
+    }
+
+    if (!_checkQuantityFormat(cpu)) {
+      throw 'cpu format failed';
+    }
+
+    List<Authorization> auth = [
+      Authorization()
+        ..actor = "$account"
+        ..permission = "active"
+    ];
+
+    Map data = {
+      "from": "$account",
+      "receiver": "$account",
+      "unstake_net_quantity": "$net EOS",
+      "unstake_cpu_quantity": "$cpu EOS",
+    };
+
+    List<Action> actions = [
+      Action()
+        ..account = 'eosio'
+        ..name = 'undelegatebw'
+        ..authorization = auth
+        ..data = data
+    ];
+
+    // print(actions.first.toJson().toString());
+
+    Transaction transaction = Transaction()..actions = actions;
+
+    NodeInfo info = await this.getInfo();
+    if (info.headBlockNum == null ||
+        info.chainId == null ||
+        transactionTypes['transaction'] == null) {
+      return Future.error('info or type is NULL');
+    }
+
+    Block refBlock = await getBlock(
+      blockNumOrId: (info.headBlockNum! - blocksBehind).toString(),
+    );
+    Transaction trx = await _fullFill(transaction, refBlock);
+    PushTransactionArgs pushTransactionArgs = await _pushTransactionArgs(
+      chainId: info.chainId!,
+      transactionType: transactionTypes['transaction']!,
+      transaction: trx,
+      sign: sign,
+      info: info,
+      refBlock: refBlock,
+    );
+
+    var response = await this._post('/chain/push_transaction', {
+      'signatures': pushTransactionArgs.signatures,
+      'compression': false,
+      'packed_context_free_data': '',
+      'packed_trx': ser.arrayToHex(pushTransactionArgs.serializedTransaction),
+    });
+
+    return response;
+  }
+
+  Future<dynamic> newaccount(
+    String account,
+    String publicKey, {
+    bool sign = true,
+    int blocksBehind = 3,
+  }) async {
+    if (!_checkEOSAccount(account)) {
+      throw 'account format failed';
+    }
+
+    List<Authorization> auth = [
+      Authorization()
+        ..actor = "$account"
+        ..permission = "active"
+    ];
+
+    Map data = {
+      "creator": "$account",
+      "name": "$account",
+      "owner": {
+        "threshold": 1,
+        "keys": [
+          {"key": "$publicKey", "weight": 1}
+        ],
+        "accounts": [],
+        "waits": []
+      },
+      "active": {
+        "threshold": 1,
+        "keys": [
+          {"key": "$publicKey", "weight": 1}
+        ],
+        "accounts": [],
+        "waits": []
+      }
+    };
+
+    List<Action> actions = [
+      Action()
+        ..account = 'eosio'
+        ..name = 'newaccount'
+        ..authorization = auth
+        ..data = data
+    ];
+
+    // print(actions.first.toJson().toString());
+
+    Transaction transaction = Transaction()..actions = actions;
+
+    NodeInfo info = await this.getInfo();
+    if (info.headBlockNum == null ||
+        info.chainId == null ||
+        transactionTypes['transaction'] == null) {
+      return Future.error('info or type is NULL');
+    }
+
+    Block refBlock = await getBlock(
+      blockNumOrId: (info.headBlockNum! - blocksBehind).toString(),
+    );
+    Transaction trx = await _fullFill(transaction, refBlock);
+    PushTransactionArgs pushTransactionArgs = await _pushTransactionArgs(
+      chainId: info.chainId!,
+      transactionType: transactionTypes['transaction']!,
+      transaction: trx,
+      sign: sign,
+      info: info,
+      refBlock: refBlock,
+    );
+
+    var response = await this._post('/chain/push_transaction', {
+      'signatures': pushTransactionArgs.signatures,
+      'compression': false,
+      'packed_context_free_data': '',
+      'packed_trx': ser.arrayToHex(pushTransactionArgs.serializedTransaction),
+    });
+
+    return response;
+  }
+
+  Future<dynamic> powerup(
+    String account,
+    int days,
+    double netPercentage,
+    double cpuPercentage,
+    String maxPayment, {
+    bool sign = true,
+    int blocksBehind = 3,
+  }) async {
+    if (!_checkEOSAccount(account)) {
+      throw 'account format failed';
+    }
+
+    if (!_checkQuantityFormat(maxPayment)) {
+      throw 'maxPayment format failed';
+    }
+
+    int net_frac = (pow(10, 15) * netPercentage).toInt();
+    int cpu_frac = (pow(10, 15) * cpuPercentage).toInt();
+
+    List<Authorization> auth = [
+      Authorization()
+        ..actor = "$account"
+        ..permission = "active"
+    ];
+
+    Map data = {
+      "payer": "$account",
+      "receiver": "$account",
+      "days": days,
+      "net_frac": "$net_frac",
+      "cpu_frac": "$cpu_frac",
+      "max_payment": "$maxPayment EOS",
+    };
+
+    List<Action> actions = [
+      Action()
+        ..account = 'eosio'
+        ..name = 'powerup'
+        ..authorization = auth
+        ..data = data
+    ];
+
+    // print(actions.first.toJson().toString());
+
+    Transaction transaction = Transaction()..actions = actions;
+
+    NodeInfo info = await this.getInfo();
+    if (info.headBlockNum == null ||
+        info.chainId == null ||
+        transactionTypes['transaction'] == null) {
+      return Future.error('info or type is NULL');
+    }
+
+    Block refBlock = await getBlock(
+      blockNumOrId: (info.headBlockNum! - blocksBehind).toString(),
+    );
+    Transaction trx = await _fullFill(transaction, refBlock);
+    PushTransactionArgs pushTransactionArgs = await _pushTransactionArgs(
+      chainId: info.chainId!,
+      transactionType: transactionTypes['transaction']!,
+      transaction: trx,
+      sign: sign,
+      info: info,
+      refBlock: refBlock,
+    );
+
+    var response = await this._post('/chain/push_transaction', {
+      'signatures': pushTransactionArgs.signatures,
+      'compression': false,
+      'packed_context_free_data': '',
+      'packed_trx': ser.arrayToHex(pushTransactionArgs.serializedTransaction),
+    });
+
+    return response;
+  }
+
+  Future<dynamic> buyram(
+    String account,
+    String quant, {
+    bool sign = true,
+    int blocksBehind = 3,
+  }) async {
+    if (!_checkEOSAccount(account)) {
+      throw 'account format failed';
+    }
+
+    if (!_checkQuantityFormat(quant)) {
+      throw 'quant format failed';
+    }
+
+    List<Authorization> auth = [
+      Authorization()
+        ..actor = "$account"
+        ..permission = "active"
+    ];
+
+    Map data = {
+      "payer": "$account",
+      "receiver": "$account",
+      "quant": "$quant EOS",
+    };
+
+    List<Action> actions = [
+      Action()
+        ..account = 'eosio'
+        ..name = 'buyram'
+        ..authorization = auth
+        ..data = data
+    ];
+
+    Transaction transaction = Transaction()..actions = actions;
+
+    NodeInfo info = await this.getInfo();
+    if (info.headBlockNum == null ||
+        info.chainId == null ||
+        transactionTypes['transaction'] == null) {
+      return Future.error('info or type is NULL');
+    }
+
+    Block refBlock = await getBlock(
+      blockNumOrId: (info.headBlockNum! - blocksBehind).toString(),
+    );
+    Transaction trx = await _fullFill(transaction, refBlock);
+    PushTransactionArgs pushTransactionArgs = await _pushTransactionArgs(
+      chainId: info.chainId!,
+      transactionType: transactionTypes['transaction']!,
+      transaction: trx,
+      sign: sign,
+      info: info,
+      refBlock: refBlock,
+    );
+
+    var response = await this._post('/chain/push_transaction', {
+      'signatures': pushTransactionArgs.signatures,
+      'compression': false,
+      'packed_context_free_data': '',
+      'packed_trx': ser.arrayToHex(pushTransactionArgs.serializedTransaction),
+    });
+
+    return response;
   }
 
   /// Get data needed to serialize actions in a contract */
@@ -354,7 +732,7 @@ class EOSClient {
     String? name,
     Object? data,
   ) {
-    var action = contract?.actions[name];
+    Type? action = contract?.actions[name];
     if (action == null) {
       throw "Unknown action $name in contract $account";
     }
@@ -381,12 +759,16 @@ class EOSClient {
     required Type transactionType,
     required Transaction transaction,
     required bool sign,
+    required NodeInfo info,
+    required Block refBlock,
   }) async {
     List<String> signatures = [];
 
     RequiredKeys requiredKeys = await getRequiredKeys(
       transaction: transaction,
       availableKeys: this.keys.keys.toList(),
+      info: info,
+      refBlock: refBlock,
     );
 
     Uint8List serializedTrx = transaction.toBinary(transactionType);
@@ -403,6 +785,16 @@ class EOSClient {
     }
 
     return PushTransactionArgs(signatures, serializedTrx);
+  }
+
+  bool _checkQuantityFormat(String quantity) {
+    const _regExp = r"^[0-9]+(\.[0-9]{4}){1}$";
+    return RegExp(_regExp).hasMatch(quantity);
+  }
+
+  bool _checkEOSAccount(String account) {
+    const _regExp = r"(^[a-z1-5]{12}$)";
+    return RegExp(_regExp).hasMatch(account);
   }
 }
 
