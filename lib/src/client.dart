@@ -316,6 +316,7 @@ class EOSClient {
     String account,
     String net,
     String cpu, {
+    String tokenName = 'EOS',
     bool sign = true,
     int blocksBehind = 3,
   }) async {
@@ -340,8 +341,8 @@ class EOSClient {
     Map data = {
       "from": "$account",
       "receiver": "$account",
-      "stake_net_quantity": "$net EOS",
-      "stake_cpu_quantity": "$cpu EOS",
+      "stake_net_quantity": "$net $tokenName",
+      "stake_cpu_quantity": "$cpu $tokenName",
       "transfer": false,
     };
 
@@ -391,6 +392,7 @@ class EOSClient {
     String account,
     String net,
     String cpu, {
+    String tokenName = 'EOS',
     bool sign = true,
     int blocksBehind = 3,
   }) async {
@@ -415,8 +417,8 @@ class EOSClient {
     Map data = {
       "from": "$account",
       "receiver": "$account",
-      "unstake_net_quantity": "$net EOS",
-      "unstake_cpu_quantity": "$cpu EOS",
+      "unstake_net_quantity": "$net $tokenName",
+      "unstake_cpu_quantity": "$cpu $tokenName",
     };
 
     List<Action> actions = [
@@ -546,6 +548,7 @@ class EOSClient {
     double netPercentage,
     double cpuPercentage,
     String maxPayment, {
+    String tokenName = 'EOS',
     bool sign = true,
     int blocksBehind = 3,
   }) async {
@@ -572,7 +575,7 @@ class EOSClient {
       "days": days,
       "net_frac": "$net_frac",
       "cpu_frac": "$cpu_frac",
-      "max_payment": "$maxPayment EOS",
+      "max_payment": "$maxPayment $tokenName",
     };
 
     List<Action> actions = [
@@ -620,6 +623,7 @@ class EOSClient {
   Future<dynamic> buyram(
     String account,
     String quant, {
+    String tokenName = 'EOS',
     bool sign = true,
     int blocksBehind = 3,
   }) async {
@@ -640,7 +644,7 @@ class EOSClient {
     Map data = {
       "payer": "$account",
       "receiver": "$account",
-      "quant": "$quant EOS",
+      "quant": "$quant $tokenName",
     };
 
     List<Action> actions = [
@@ -788,8 +792,9 @@ class EOSClient {
   }
 
   bool _checkQuantityFormat(String quantity) {
-    const _regExp = r"^[0-9]+(\.[0-9]{4}){1}$";
-    return RegExp(_regExp).hasMatch(quantity);
+    return true;
+    // const _regExp = r"^[0-9]+(\.[0-9]{4}){1}$";
+    // return RegExp(_regExp).hasMatch(quantity);
   }
 
   bool _checkEOSAccount(String account) {
